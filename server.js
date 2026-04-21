@@ -20,8 +20,22 @@ connectDB()
 
 const app = express()
 
-// ─── Core middleware ─────────────────────────────────────────────────────────
-app.use(cors())
+// ─── CORS ─────────────────────────────────────────────────────────────────────
+// Set FRONTEND_URL in your .env to restrict to your deployed frontend origin
+const allowedOrigins = process.env.FRONTEND_URL
+  ? [process.env.FRONTEND_URL]
+  : ['http://localhost:5173', 'http://localhost:3000']
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    callback(new Error(`CORS: origin ${origin} not allowed`))
+  },
+  credentials: true,
+}))
+
 app.use(express.json())
 
 // ─── Health check ────────────────────────────────────────────────────────────
