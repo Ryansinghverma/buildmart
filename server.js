@@ -20,11 +20,12 @@ connectDB()
 
 const app = express()
 
-// ─── CORS ─────────────────────────────────────────────────────────────────────
-// Set FRONTEND_URL in your .env to restrict to your deployed frontend origin
-const allowedOrigins = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL]
-  : ['http://localhost:5173', 'http://localhost:3000']
+// ─── CORS ────────────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.FRONTEND_URL,        // e.g. https://build-mart-xxx.vercel.app
+].filter(Boolean)
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -34,6 +35,8 @@ app.use(cors({
     callback(new Error(`CORS: origin ${origin} not allowed`))
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 
 app.use(express.json())
