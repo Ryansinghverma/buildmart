@@ -2,6 +2,7 @@ const Order = require('../models/Order')
 const DealerListing = require('../models/DealerListing')
 const CreditLedger = require('../models/CreditLedger')
 const User = require('../models/User')
+const mongoose = require('mongoose')
 
 // POST /api/orders
 const createOrder = async (req, res, next) => {
@@ -123,6 +124,11 @@ const createOrder = async (req, res, next) => {
 const getOrdersByUser = async (req, res, next) => {
   try {
     const { status } = req.query
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
+      return res.json([])
+    }
+
     const filter = { contractorId: req.params.userId }
     if (status) filter.status = status
 
@@ -143,7 +149,12 @@ const getAllOrders = async (req, res, next) => {
     const { status, dealerId } = req.query
     const filter = {}
     if (status) filter.status = status
-    if (dealerId) filter['items.dealerId'] = dealerId
+    if (dealerId) {
+      if (!mongoose.Types.ObjectId.isValid(dealerId)) {
+        return res.json([])
+      }
+      filter['items.dealerId'] = dealerId
+    }
 
     const orders = await Order.find(filter)
       .populate('contractorId', 'name phone')
@@ -190,6 +201,11 @@ const updateOrderStatus = async (req, res, next) => {
 const getDealerOrders = async (req, res, next) => {
   try {
     const { status } = req.query
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.dealerId)) {
+      return res.json([])
+    }
+
     const filter = { 'items.dealerId': req.params.dealerId }
     if (status) filter.status = status
 

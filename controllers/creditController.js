@@ -1,10 +1,16 @@
 const CreditLedger = require('../models/CreditLedger')
 const User = require('../models/User')
+const mongoose = require('mongoose')
 
 // GET /api/credit/:contractorId
 const getCreditLedger = async (req, res, next) => {
   try {
     const { status } = req.query
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.contractorId)) {
+      return res.json({ entries: [], pendingTotal: 0 })
+    }
+
     const filter = { contractorId: req.params.contractorId }
     if (status) filter.status = status
 

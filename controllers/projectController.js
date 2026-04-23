@@ -1,9 +1,13 @@
 const Project = require('../models/Project')
 const Order = require('../models/Order')
+const mongoose = require('mongoose')
 
 // GET /api/projects/:userId
 const getProjects = async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
+      return res.json([])
+    }
     const projects = await Project.find({ contractorId: req.params.userId }).sort({
       createdAt: -1,
     })

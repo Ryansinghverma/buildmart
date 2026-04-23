@@ -1,4 +1,5 @@
 const DealerListing = require('../models/DealerListing')
+const mongoose = require('mongoose')
 
 // POST /api/listings
 const createListing = async (req, res, next) => {
@@ -42,6 +43,10 @@ const updateListing = async (req, res, next) => {
 // GET /api/listings/:productId  — all dealers stocking a product
 const getListingsByProduct = async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.productId)) {
+      return res.json([])
+    }
+
     const listings = await DealerListing.find({
       productId: req.params.productId,
       isActive: true,
@@ -59,6 +64,10 @@ const getListingsByProduct = async (req, res, next) => {
 // GET /api/dealer/:dealerId/listings  — all listings by a dealer
 const getListingsByDealer = async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.dealerId)) {
+      return res.json([])
+    }
+
     const listings = await DealerListing.find({ dealerId: req.params.dealerId })
       .populate('productId', 'name category unit image')
       .sort({ createdAt: -1 })
