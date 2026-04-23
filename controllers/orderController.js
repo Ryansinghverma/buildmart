@@ -6,7 +6,9 @@ const User = require('../models/User')
 // POST /api/orders
 const createOrder = async (req, res, next) => {
   try {
-    const { items, deliveryAddress, paymentType, projectId } = req.body
+    const { items, projectId } = req.body
+    const deliveryAddress = req.body.deliveryAddress || "Address not provided (Testing)"
+    const paymentType = req.body.paymentType || "cash"
     const contractorId = req.user._id
 
     if (!items || items.length === 0) {
