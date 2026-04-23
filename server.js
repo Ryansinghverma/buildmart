@@ -14,7 +14,10 @@ const dealerRoutes   = require('./routes/dealerRoutes')
 const projectRoutes  = require('./routes/projectRoutes')
 const creditRoutes   = require('./routes/creditRoutes')
 
-connectDB()
+// ─── Database ────────────────────────────────────────────────────────────────
+if (process.env.NODE_ENV !== 'test') {
+  connectDB()
+}
 
 const app = express()
 
@@ -42,6 +45,10 @@ app.use((req, res) => res.status(404).json({ message: 'Route not found' }))
 app.use(errorHandler)
 
 const PORT = process.env.PORT || 5000
-app.listen(PORT, () => {
-  console.log(`🚀 BuildMart API running on port ${PORT} [${process.env.NODE_ENV}]`)
-})
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 BuildMart API running on port ${PORT} [${process.env.NODE_ENV}]`)
+  })
+}
+
+module.exports = app

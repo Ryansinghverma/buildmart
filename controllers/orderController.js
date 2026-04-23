@@ -14,25 +14,53 @@ const createOrder = async (req, res, next) => {
     }
 
     // Validate stock and calculate total
-    let totalAmount = 0
+    let totalAmount = 0;
+    const errors = [];
+
     for (const item of items) {
-      const listing = await DealerListing.findOne({
+      if (!item.dealerId || !item.productId) {
+        errors.push(`Missing dealerId or productId for an item.`);
+        continue;
+      }
+
+      // Find listing regardless of status to give a specific error
+      let listing = await DealerListing.findOne({
         dealerId: item.dealerId,
         productId: item.productId,
-        isActive: true,
-      })
+      });
+
+      // 🔥 Fallback Logic: If listing is missing, inactive, or out of stock, find the cheapest active alternative
+      if (!listing || !listing.isActive || listing.stock < item.quantity) {
+        const fallbackListing = await DealerListing.findOne({
+          productId: item.productId,
+          isActive: true,
+          stock: { $gte: item.quantity }
+        }).sort({ price: 1 }); // Sort by cheapest
+
+        if (fallbackListing) {
+          console.log(`Auto-swapped dealer for product ${item.productId} to ${fallbackListing.dealerId}`);
+          listing = fallbackListing;
+          item.dealerId = fallbackListing.dealerId; // Crucial: Update the order item to point to the new dealer
+        }
+      }
+
+      // Final validation checks
       if (!listing) {
-        return res.status(400).json({
-          message: `No active listing found for product ${item.productId} from dealer ${item.dealerId}`,
-        })
+        errors.push(`Product ${item.productId} is no longer sold by this dealer, and no alternatives were found.`);
+      } else if (!listing.isActive) {
+        errors.push(`Product ${item.productId} is temporarily unavailable.`);
+      } else if (listing.stock < item.quantity) {
+        errors.push(`Only ${listing.stock} units available for product ${item.productId}.`);
+      } else {
+        // Success
+        item.price = listing.price;
+        totalAmount += listing.price * item.quantity;
       }
-      if (listing.stock < item.quantity) {
-        return res.status(400).json({
-          message: `Insufficient stock. Available: ${listing.stock}`,
-        })
-      }
-      item.price = listing.price
-      totalAmount += listing.price * item.quantity
+    }
+
+    // If ANY items failed, reject the whole order
+    if (errors.length > 0) {
+      return res.status(400).json({ message: 'Cart validation failed', errors });
     }
 
     // Credit check
