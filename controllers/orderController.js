@@ -114,7 +114,10 @@ const createOrder = async (req, res, next) => {
       { path: 'items.dealerId', select: 'name phone' },
     ])
 
-    res.status(201).json(order)
+    const orderObj = order.toObject()
+    orderObj.products = orderObj.items
+
+    res.status(201).json(orderObj)
   } catch (error) {
     next(error)
   }
@@ -137,7 +140,13 @@ const getOrdersByUser = async (req, res, next) => {
       .populate('items.dealerId', 'name phone')
       .sort({ createdAt: -1 })
 
-    res.json(orders)
+    const patchedOrders = orders.map(order => {
+      const orderObj = order.toObject()
+      orderObj.products = orderObj.items
+      return orderObj
+    })
+
+    res.json(patchedOrders)
   } catch (error) {
     next(error)
   }
@@ -162,7 +171,13 @@ const getAllOrders = async (req, res, next) => {
       .populate('items.dealerId', 'name phone')
       .sort({ createdAt: -1 })
 
-    res.json(orders)
+    const patchedOrders = orders.map(order => {
+      const orderObj = order.toObject()
+      orderObj.products = orderObj.items
+      return orderObj
+    })
+
+    res.json(patchedOrders)
   } catch (error) {
     next(error)
   }
@@ -214,7 +229,13 @@ const getDealerOrders = async (req, res, next) => {
       .populate('items.productId', 'name unit')
       .sort({ createdAt: -1 })
 
-    res.json(orders)
+    const patchedOrders = orders.map(order => {
+      const orderObj = order.toObject()
+      orderObj.products = orderObj.items
+      return orderObj
+    })
+
+    res.json(patchedOrders)
   } catch (error) {
     next(error)
   }
